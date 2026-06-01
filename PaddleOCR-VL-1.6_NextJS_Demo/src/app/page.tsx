@@ -13,6 +13,7 @@ import {
   Info,
   Globe,
   Settings,
+  Camera,
   RefreshCw,
   AlertCircle,
   Sun,
@@ -208,6 +209,15 @@ export default function Home() {
 
   // Studio Navigation Tabs (Layout Studio is active)
   const [activeTab, setActiveTab] = useState<"doc-parsing" | "element-rec" | "spotting" | "settings">("doc-parsing");
+
+  // Track last active functional tab to switch back from settings
+  const [lastFunctionalTab, setLastFunctionalTab] = useState<"doc-parsing" | "element-rec" | "spotting">("doc-parsing");
+
+  useEffect(() => {
+    if (activeTab !== "settings") {
+      setLastFunctionalTab(activeTab);
+    }
+  }, [activeTab]);
   
   // Example files loaded from backend API
   const [examples, setExamples] = useState<ExampleData>({ complex: [], targeted: [], spotting: [] });
@@ -222,6 +232,11 @@ export default function Home() {
   const [chartParsing, setChartParsing] = useState(true);
   const [docUnwarping, setDocUnwarping] = useState(false);
   const [orientationClassify, setOrientationClassify] = useState(false);
+  
+  // Camera state
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   
   // Element recognition sub-type selection (when element-rec is active)
   const [elementRecType, setElementRecType] = useState<"Text Recognition" | "Formula Recognition" | "Table Recognition" | "Chart Recognition" | "Seal Recognition">("Text Recognition");
@@ -624,7 +639,11 @@ export default function Home() {
       reader.onload = () => {
         const result = reader.result as string;
         setPreviewSrc(result);
-        setUploadedBase64(result.split(",")[1]);
+        const base64 = result.split(",")[1];
+        setUploadedBase64(base64);
+        
+        // Auto-run analysis when uploading
+        triggerAutoAnalysis(base64, activeTab);
       };
       reader.readAsDataURL(uploadedFile);
       setSelectedExample("");
@@ -757,6 +776,133 @@ export default function Home() {
       setErrorMsg(err.message || "Failed to run analysis.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Trigger automatic analysis
+  const triggerAutoAnalysis = async (base64: string, tab: string) => {
+    setIsLoading(true);
+    setErrorMsg("");
+    clearOutputs();
+    setOutputTab("content");
+
+    const startTime = performance.now();
+    try {
+      const payload: any = {
+        file: base64,
+        examplePath: null,
+        useDocUnwarping: docUnwarping,
+        useDocOrientationClassify: orientationClassify,
+      };
+
+      if (tab === "doc-parsing") {
+        payload.useLayoutDetection = true;
+        payload.useChartRecognition = chartParsing;
+      } else if (tab === "element-rec") {
+        payload.useLayoutDetection = false;
+        payload.promptLabel = elementRecType;
+        payload.useDocUnwarping = false;
+        payload.useDocOrientationClassify = false;
+      } else if (tab === "spotting") {
+        payload.useLayoutDetection = false;
+        payload.promptLabel = "spotting";
+        payload.useDocUnwarping = false;
+        payload.useDocOrientationClassify = false;
+      }
+
+      const res = await fetch("/api/parse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Server returned error: ${res.status}`);
+      }
+
+      const data = await res.json();
+      setRawApiResponse(JSON.stringify(data, null, 2));
+
+      if (data.errorCode !== 0) {
+        throw new Error(data.errorMsg || "API error occurred.");
+      }
+
+      processApiResponse(data.result);
+      setProcessingTime(performance.now() - startTime);
+      setShowOverlays(true);
+    } catch (err: any) {
+      setProcessingTime(null);
+      setErrorMsg(err.message || "Failed to run analysis.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Camera capture methods
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      setCameraStream(stream);
+      setIsCameraActive(true);
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      }, 100);
+    } catch (err) {
+      console.error("Camera access failed:", err);
+      alert("Could not access camera. Please make sure camera permissions are granted.");
+    }
+  };
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach((track) => track.stop());
+      setCameraStream(null);
+    }
+    setIsCameraActive(false);
+  };
+
+  const handleAlwaysVisibleUpload = () => {
+    if (activeTab === "settings") {
+      setActiveTab(lastFunctionalTab);
+    }
+    triggerUploadClick();
+  };
+
+  const handleAlwaysVisibleCamera = () => {
+    if (activeTab === "settings") {
+      setActiveTab(lastFunctionalTab);
+      startCamera();
+    } else {
+      if (isCameraActive) {
+        stopCamera();
+      } else {
+        startCamera();
+      }
+    }
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current && cameraStream) {
+      const video = videoRef.current;
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL("image/jpeg");
+        const base64 = dataUrl.split(",")[1];
+        
+        setPreviewSrc(dataUrl);
+        setUploadedBase64(base64);
+        setSelectedExample("");
+        setUploadedFile(null);
+        
+        stopCamera();
+        triggerAutoAnalysis(base64, activeTab);
+      }
     }
   };
 
@@ -1374,6 +1520,33 @@ fetch(url, {
                 </div>
               )}
             </button>
+
+            {/* Collapse/Minimize button */}
+            <button
+              onClick={() => {
+                const nextMode = menuDisplay === "icon" ? "icon-text" : "icon";
+                setMenuDisplay(nextMode);
+                localStorage.setItem("menuDisplay", nextMode);
+              }}
+              className={`rounded-lg transition-all cursor-pointer flex items-center text-left ${
+                menuDisplay === "icon" 
+                  ? "h-9 w-9 justify-center relative group" 
+                  : "px-3.5 py-2.5 w-full gap-3 text-xs font-semibold"
+              } text-slate-550 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-850 hover:text-slate-800 dark:hover:text-white`}
+              title={menuDisplay === "icon" ? "Expand Menu" : "Collapse Menu"}
+            >
+              {menuDisplay === "icon" ? (
+                <ChevronRight className="h-5 w-5 shrink-0" />
+              ) : (
+                <ChevronLeft className="h-5 w-5 shrink-0" />
+              )}
+              {menuDisplay !== "icon" && <span>Collapse</span>}
+              {menuDisplay === "icon" && (
+                <div className="absolute left-16 bg-slate-900 text-white text-[10px] px-2 py-1 rounded shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 whitespace-nowrap">
+                  Expand Menu
+                </div>
+              )}
+            </button>
           </div>
         </aside>
 
@@ -1428,6 +1601,38 @@ fetch(url, {
               >
                 <Settings className="h-4.5 w-4.5" />
               </button>
+
+              {/* Always visible Upload & Camera buttons */}
+              <div className="flex items-center gap-1 bg-[#f3f2f1] dark:bg-zinc-905 p-0.5 rounded border border-[#edebe9] dark:border-zinc-800">
+                <button
+                  onClick={handleAlwaysVisibleUpload}
+                  className="p-1.5 rounded hover:bg-white dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-400 hover:text-[#0078d4] dark:hover:text-white cursor-pointer transition-all flex items-center gap-1 border-none bg-transparent"
+                  title={lang === "id" ? "Unggah Gambar" : lang === "ja" ? "画像をアップロード" : lang === "zh" ? "上传图片" : "Upload Image"}
+                >
+                  <Upload className="h-4 w-4" />
+                  <span className="hidden md:inline text-[10px] font-bold uppercase tracking-wider">{lang === "id" ? "Unggah" : lang === "ja" ? "アップロード" : lang === "zh" ? "上传" : "Upload"}</span>
+                </button>
+                <div className="h-4 w-[1px] bg-slate-200 dark:bg-zinc-800 self-center" />
+                <button
+                  onClick={handleAlwaysVisibleCamera}
+                  className={`p-1.5 rounded cursor-pointer transition-all flex items-center gap-1 border-none bg-transparent ${
+                    isCameraActive 
+                      ? "bg-rose-50 dark:bg-rose-955/20 text-rose-600 font-semibold" 
+                      : "hover:bg-white dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-400 hover:text-[#0078d4] dark:hover:text-white"
+                  }`}
+                  title={isCameraActive 
+                    ? (lang === "id" ? "Matikan Kamera" : lang === "ja" ? "カメラをオフ" : lang === "zh" ? "关闭相机" : "Turn off Camera")
+                    : (lang === "id" ? "Gunakan Kamera" : lang === "ja" ? "カメラを使用" : lang === "zh" ? "使用相机" : "Use Camera")
+                  }
+                >
+                  <Camera className="h-4 w-4" />
+                  <span className="hidden md:inline text-[10px] font-bold uppercase tracking-wider">
+                    {isCameraActive 
+                      ? (lang === "id" ? "Mati" : lang === "ja" ? "オフ" : lang === "zh" ? "关闭" : "Off") 
+                      : (lang === "id" ? "Kamera" : lang === "ja" ? "カメラ" : lang === "zh" ? "相机" : "Camera")}
+                  </span>
+                </button>
+              </div>
 
               <button 
                 onClick={handleLogout}
@@ -1612,6 +1817,33 @@ fetch(url, {
                   {/* Bounding box toggles & Zoom items */}
                   <div className="flex items-center gap-3">
                     
+                    {/* Always visible Upload & Camera controls */}
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={handleAlwaysVisibleUpload}
+                        className="p-1 rounded text-slate-500 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-800 dark:hover:text-white cursor-pointer transition-colors border-none bg-transparent"
+                        title={lang === "id" ? "Unggah Gambar" : lang === "ja" ? "画像をアップロード" : lang === "zh" ? "上传图片" : "Upload Image"}
+                      >
+                        <Upload className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={handleAlwaysVisibleCamera}
+                        className={`p-1 rounded cursor-pointer transition-colors border-none bg-transparent ${
+                          isCameraActive 
+                            ? "bg-rose-50 dark:bg-rose-955/20 text-rose-600 hover:bg-rose-100 dark:hover:bg-rose-900/30" 
+                            : "text-slate-500 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-800 dark:hover:text-white"
+                        }`}
+                        title={isCameraActive 
+                          ? (lang === "id" ? "Matikan Kamera" : lang === "ja" ? "カメラをオフ" : lang === "zh" ? "关闭相机" : "Turn off Camera")
+                          : (lang === "id" ? "Gunakan Kamera" : lang === "ja" ? "カメラを使用" : lang === "zh" ? "使用相机" : "Use Camera")
+                        }
+                      >
+                        <Camera className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    <div className="h-4 w-[1px] bg-slate-200 dark:bg-zinc-800" />
+                    
                     {previewSrc && (
                       <button
                         onClick={() => {
@@ -1746,7 +1978,33 @@ fetch(url, {
                     onDrop={handleDrop}
                     className="flex-1 overflow-auto p-0 flex items-center justify-center bg-slate-50/60 dark:bg-zinc-955/20"
                   >
-                    {previewSrc ? (
+                    {isCameraActive ? (
+                      <div className="w-full max-w-md bg-zinc-900 dark:bg-zinc-955 rounded-xl overflow-hidden shadow-lg p-5 flex flex-col items-center gap-4 border border-slate-200 dark:border-zinc-800 mx-4">
+                        <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden border border-zinc-800">
+                          <video 
+                            ref={videoRef} 
+                            autoPlay 
+                            playsInline 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex gap-3 w-full">
+                          <button
+                            onClick={capturePhoto}
+                            className="flex-1 py-2 px-3 rounded text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs border-none"
+                          >
+                            <Camera className="h-3.5 w-3.5" />
+                            {lang === "id" ? "Ambil Foto" : lang === "ja" ? "写真を撮影" : lang === "zh" ? "拍摄照片" : "Capture Photo"}
+                          </button>
+                          <button
+                            onClick={stopCamera}
+                            className="flex-1 py-2 px-3 rounded text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs border-none"
+                          >
+                            {lang === "id" ? "Batal" : lang === "ja" ? "キャンセル" : lang === "zh" ? "取消" : "Cancel"}
+                          </button>
+                        </div>
+                      </div>
+                    ) : previewSrc ? (
                       <div 
                         className="relative transition-transform duration-200 w-full h-full flex items-center justify-center"
                         style={{ transform: `scale(${zoomScale / 100})`, transformOrigin: "center center" }}
@@ -1760,8 +2018,7 @@ fetch(url, {
                       </div>
                     ) : (
                       <div 
-                        onClick={triggerUploadClick}
-                        className="border-2 border-dashed border-slate-355 dark:border-zinc-800 rounded-xl p-8 bg-white dark:bg-zinc-900/30 text-center max-w-sm cursor-pointer shadow-xs hover:border-[#0078d4] dark:hover:border-zinc-600 transition-colors flex flex-col items-center gap-3 group"
+                        className="border-2 border-dashed border-slate-355 dark:border-zinc-800 rounded-xl p-8 bg-white dark:bg-zinc-900/30 text-center max-w-sm shadow-xs hover:border-[#0078d4] dark:hover:border-zinc-600 transition-colors flex flex-col items-center gap-4 group"
                       >
                         <div className="h-11 w-11 rounded-full bg-[#0078d4]/10 flex items-center justify-center text-[#0078d4] group-hover:scale-105 transition-transform">
                           <Upload className="h-5 w-5" />
@@ -1771,6 +2028,30 @@ fetch(url, {
                           <p className="text-xs text-slate-455 dark:text-zinc-505 mt-1">
                             {t("uploadDesc")}
                           </p>
+                        </div>
+                        
+                        <div className="flex gap-3 w-full mt-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              triggerUploadClick();
+                            }}
+                            className="flex-1 py-2.5 px-3 rounded text-xs font-semibold bg-[#0078d4] hover:bg-[#106ebe] text-white transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs border-none"
+                          >
+                            <Upload className="h-3.5 w-3.5" />
+                            {lang === "id" ? "Unggah" : lang === "ja" ? "アップロード" : lang === "zh" ? "上传" : "Upload"}
+                          </button>
+                          
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              startCamera();
+                            }}
+                            className="flex-1 py-2.5 px-3 rounded text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs border border-slate-200 dark:border-zinc-700"
+                          >
+                            <Camera className="h-3.5 w-3.5" />
+                            {lang === "id" ? "Kamera" : lang === "ja" ? "カメラ" : lang === "zh" ? "相机" : "Camera"}
+                          </button>
                         </div>
                       </div>
                     )}
@@ -2157,6 +2438,13 @@ fetch(url, {
 
         </main>
 
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleFileChange} 
+          accept="image/*" 
+          className="hidden" 
+        />
       </div>
 
     </div>

@@ -27,6 +27,7 @@ See [docs/design.md](docs/design.md) for rationale and examples.
 ## Issue Tracking Policy (Mandatory)
 
 **Always record any issues, causes, and solutions** in the `/issues/` folder.
+- **Definition of an Issue**: An issue refers strictly to a blocking error, bug, or unexpected behavior that requires a fix. New feature requests, additions, or enhancements are not considered issues and should not be logged here.
 - File naming convention: `{2-digits-number}-{slug}.md` (e.g., `01-base64-image-display.md`).
 - Document the issue clearly, describing the symptoms/errors, the root cause, and the implemented solution.
 
