@@ -63,24 +63,24 @@ CMD ["./scripts/serve-pipeline.sh"]
 
 
 # ==========================================
-# Stage 4: Gradio UI (Frontend)
+# Stage 4: Next.js UI (Frontend)
 # ==========================================
-FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS gradio-ui
+FROM node:20-alpine AS nextjs-ui
 WORKDIR /app
 
-# Enable bytecode compilation
-ENV UV_COMPILE_BYTECODE=1
+# Copy package lockfiles first for caching
+COPY PaddleOCR-VL-1.6_NextJS_Demo/package*.json ./
+RUN npm ci
 
-# Copy dependency files to cache layer
-COPY pyproject.toml uv.lock ./
+# Copy nextjs application source files
+COPY PaddleOCR-VL-1.6_NextJS_Demo ./
 
-# Install dependencies
-RUN uv sync --frozen --no-install-project --no-dev
+# Copy PaddleOCR-VL-1.6_Online_Demo examples directory for filesystem API path scanning
+COPY PaddleOCR-VL-1.6_Online_Demo/examples ./PaddleOCR-VL-1.6_Online_Demo/examples
 
-# Copy application files
-COPY . .
+# Build production app
+ENV NODE_ENV=production
+RUN npm run build
 
-# Environment variables for Gradio inside docker
-ENV GRADIO_SERVER_NAME=0.0.0.0
-
-CMD ["./run.sh"]
+EXPOSE 3000
+CMD ["npm", "run", "start"]

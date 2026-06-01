@@ -39,13 +39,11 @@ services:
   paddle-ocr-demo:
     build:
       context: .
-      target: gradio-ui
+      target: nextjs-ui
     environment:
-      - GRADIO_SERVER_PORT=7860
-      - GRADIO_SERVER_NAME=0.0.0.0
-      - BOS_URL=examples
-      - GRADIO_ALLOWED_PATHS=/app/PaddleOCR-VL-1.6_Online_Demo
       - API_URL=http://nginx/layout-parsing
+      - DEMO_USER=${DEMO_USER:-demo}
+      - DEMO_PASS=${DEMO_PASS:-demo}
     depends_on:
       - pipeline-api-gpu0
       - pipeline-api-gpu1

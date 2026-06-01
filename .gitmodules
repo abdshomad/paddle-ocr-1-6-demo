@@ -1,3 +1,6 @@
 [submodule "PaddleOCR-VL-1.6_Online_Demo"]
 	path = PaddleOCR-VL-1.6_Online_Demo
 	url = https://huggingface.co/spaces/PaddlePaddle/PaddleOCR-VL-1.6_Online_Demo
+[submodule "design.md-spec"]
+	path = design.md-spec
+	url = https://github.com/google-labs-code/design.md

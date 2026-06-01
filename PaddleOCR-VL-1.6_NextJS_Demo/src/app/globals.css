@@ -1,0 +1,311 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #faf9f8;
+  --foreground: #323130;
+  --card-bg: #ffffff;
+  --border-color: #edebe9;
+  --accent-blue: #0078d4;
+  --accent-hover: #106ebe;
+  --neutral-dark: #201f1e;
+  --neutral-light: #f3f2f1;
+  --sidebar-dark: #201f1e;
+  --sidebar-hover: #323130;
+  --status-bar-bg: #f3f2f1;
+}
+
+.dark {
+  --background: #11100f;
+  --foreground: #f3f2f1;
+  --card-bg: #201f1e;
+  --border-color: #292827;
+  --accent-blue: #2899f5;
+  --accent-hover: #4fb0ff;
+  --neutral-dark: #f3f2f1;
+  --neutral-light: #252423;
+  --sidebar-dark: #1b1a19;
+  --sidebar-hover: #292827;
+  --status-bar-bg: #201f1e;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card-bg);
+  --color-border-fluent: var(--border-color);
+  --color-azure-blue: var(--accent-blue);
+  --color-azure-hover: var(--accent-hover);
+  --color-neutral-dark: var(--neutral-dark);
+  --color-neutral-light: var(--neutral-light);
+  --color-sidebar-dark: var(--sidebar-dark);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-status-bar: var(--status-bar-bg);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbars for Fluent UI panels */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 100, 100, 0.2);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-blue);
+}
+
+/* Indeterminate progress bar animation */
+@keyframes fluentProgress {
+  0% {
+    left: -40%;
+    width: 40%;
+  }
+  50% {
+    left: 100%;
+    width: 40%;
+  }
+  100% {
+    left: 100%;
+    width: 40%;
+  }
+}
+
+.animate-fluent-progress {
+  animation: fluentProgress 1.6s infinite linear;
+}
+
+/* ==========================================================================
+   Google Material 3 Theme Overrides (.theme-material)
+   ========================================================================== */
+.theme-material {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  --background: #f7f9fc;
+  --foreground: #1f1f1f;
+  --card-bg: #ffffff;
+  --border-color: #e0e2ec;
+  --accent-blue: #0b57d0; /* Google Blue */
+  --accent-hover: #0842a0;
+  --neutral-dark: #1f1f1f;
+  --neutral-light: #f0f4f9;
+  --sidebar-dark: #1f1f1f;
+  --sidebar-hover: #333538;
+  --status-bar-bg: #f0f4f9;
+}
+
+.theme-material.dark {
+  --background: #121318;
+  --foreground: #e2e2e9;
+  --card-bg: #1a1c1e;
+  --border-color: #43474e;
+  --accent-blue: #a8c7fa; /* Google Light Blue */
+  --accent-hover: #7da4e8;
+  --neutral-dark: #e2e2e9;
+  --neutral-light: #1f2025;
+  --sidebar-dark: #121318;
+  --sidebar-hover: #2a2b2f;
+  --status-bar-bg: #1a1c1e;
+}
+
+.theme-material body {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+.theme-material .rounded-lg {
+  border-radius: 1rem !important; /* M3 Cards standard (16px) */
+}
+
+.theme-material .rounded-md {
+  border-radius: 0.75rem !important; /* M3 small container (12px) */
+}
+
+.theme-material .rounded {
+  border-radius: 1.5rem !important; /* M3 large container (24px) */
+}
+
+.theme-material select {
+  border-radius: 9999px !important; /* Pill selects */
+}
+
+.theme-material button {
+  border-radius: 9999px !important; /* Pill buttons */
+}
+
+.theme-material .shadow-xs {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+}
+
+.theme-material .shadow-sm {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.03) !important;
+}
+
+/* ==========================================================================
+   Glassmorphism Theme Overrides (.theme-glass)
+   ========================================================================== */
+.theme-glass {
+  --background: linear-gradient(135deg, #fdfbf7 0%, #fafafa 50%, #f5f7fa 100%);
+  --foreground: #111111;
+  --card-bg: rgba(255, 255, 255, 0.45);
+  --border-color: rgba(0, 0, 0, 0.05);
+  --accent-blue: #7c3aed; /* Violet/Purple */
+  --accent-hover: #6d28d9;
+  --neutral-dark: #111111;
+  --neutral-light: rgba(255, 255, 255, 0.2);
+  --sidebar-dark: rgba(255, 255, 255, 0.3);
+  --sidebar-hover: rgba(0, 0, 0, 0.03);
+  --status-bar-bg: rgba(255, 255, 255, 0.4);
+}
+
+.theme-glass.dark {
+  --background: linear-gradient(135deg, #0e0d16 0%, #06060c 60%, #020204 100%);
+  --foreground: #f3f4f6;
+  --card-bg: rgba(20, 20, 22, 0.25);
+  --border-color: rgba(255, 255, 255, 0.06);
+  --accent-blue: #a78bfa; /* Light Violet/Purple */
+  --accent-hover: #c084fc;
+  --neutral-dark: #f3f4f6;
+  --neutral-light: rgba(255, 255, 255, 0.05);
+  --sidebar-dark: rgba(10, 10, 12, 0.4);
+  --sidebar-hover: rgba(255, 255, 255, 0.05);
+  --status-bar-bg: rgba(10, 10, 12, 0.3);
+}
+
+.theme-glass .bg-white {
+  background-color: rgba(255, 255, 255, 0.45) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+.theme-glass.dark .bg-white,
+.theme-glass.dark .bg-[#1a1919],
+.theme-glass.dark .bg-[#1e1e1e],
+.theme-glass.dark .bg-[#201f1e],
+.theme-glass.dark .bg-[#151413] {
+  background-color: rgba(20, 20, 22, 0.25) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+}
+
+.theme-glass .border-[#edebe9] {
+  border-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+.theme-glass.dark .border-zinc-850,
+.theme-glass.dark .border-zinc-800,
+.theme-glass.dark .border-[#292827] {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.theme-glass body {
+  background: linear-gradient(135deg, #fdfbf7 0%, #fafafa 50%, #f5f7fa 100%) !important;
+}
+
+.theme-glass.dark body {
+  background: linear-gradient(135deg, #0e0d16 0%, #06060c 60%, #020204 100%) !important;
+}
+
+/* ==========================================================================
+   Google Labs Submodule Theme: Atmospheric Glass (.theme-atmospheric-glass)
+   ========================================================================== */
+.theme-atmospheric-glass {
+  --background: #0b1326;
+  --foreground: #dae2fd;
+  --card-bg: rgba(23, 31, 51, 0.45);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --accent-blue: #adc9eb;
+  --accent-hover: #ffffff;
+  --neutral-dark: #dae2fd;
+  --neutral-light: #131b2e;
+  --sidebar-dark: #060e20;
+  --sidebar-hover: #171f33;
+  --status-bar-bg: #131b2e;
+}
+
+.theme-atmospheric-glass body {
+  background: #0b1326 !important;
+  color: #dae2fd !important;
+}
+
+.theme-atmospheric-glass .bg-white {
+  background-color: rgba(23, 31, 51, 0.45) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+/* ==========================================================================
+   Google Labs Submodule Theme: Totality Festival (.theme-totality-festival)
+   ========================================================================== */
+.theme-totality-festival {
+  font-family: 'Space Grotesk', sans-serif !important;
+  --background: #121318;
+  --foreground: #e3e1e9;
+  --card-bg: #1e1f25;
+  --border-color: #292a2f;
+  --accent-blue: #ffd700; /* Gold */
+  --accent-hover: #00e3fd; /* Neon Cyan */
+  --neutral-dark: #e3e1e9;
+  --neutral-light: #1a1b21;
+  --sidebar-dark: #0d0e13;
+  --sidebar-hover: #292a2f;
+  --status-bar-bg: #1a1b21;
+}
+
+.theme-totality-festival body {
+  font-family: 'Space Grotesk', sans-serif !important;
+  background: #121318 !important;
+  color: #e3e1e9 !important;
+}
+
+.theme-totality-festival .rounded-lg,
+.theme-totality-festival .rounded-md,
+.theme-totality-festival .rounded {
+  border-radius: 0px !important; /* Sharp theme */
+}
+
+/* ==========================================================================
+   Google Labs Submodule Theme: Paws & Paths (.theme-paws-and-paths)
+   ========================================================================== */
+.theme-paws-and-paths {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  --background: #f9f9ff;
+  --foreground: #151c27;
+  --card-bg: #ffffff;
+  --border-color: #dce2f3;
+  --accent-blue: #f59e0b; /* Amber */
+  --accent-hover: #d97706;
+  --neutral-dark: #151c27;
+  --neutral-light: #f0f3ff;
+  --sidebar-dark: #e7eefe;
+  --sidebar-hover: #dce2f3;
+  --status-bar-bg: #f0f3ff;
+}
+
+.theme-paws-and-paths body {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  background: #f9f9ff !important;
+  color: #151c27 !important;
+}
+
+.theme-paws-and-paths .rounded-lg {
+  border-radius: 1.25rem !important; /* Rounded theme */
+}
+
+.theme-paws-and-paths .rounded-md {
+  border-radius: 0.75rem !important;
+}
+
+.theme-paws-and-paths .rounded {
+  border-radius: 2rem !important;
+}
