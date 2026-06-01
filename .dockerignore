@@ -1,0 +1,5 @@
+.git
+.venv
+.antigravitycli
+__pycache__
+*.pyc

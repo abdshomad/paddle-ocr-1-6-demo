@@ -1,0 +1,285 @@
+x-vllm-template: &vllm-template
+  build:
+    context: .
+    target: vllm-server
+  deploy:
+    resources:
+      reservations:
+        devices:
+          - driver: nvidia
+            count: all
+            capabilities: [gpu]
+  volumes:
+    - ${HOME}/.cache/huggingface:/root/.cache/huggingface
+    - ${HOME}/.paddleocr:/root/.paddleocr
+    - ${HOME}/.paddlex:/root/.paddlex
+    - ./config:/app/config
+    - ./.env:/app/.env:ro
+  restart: unless-stopped
+
+x-pipeline-template: &pipeline-template
+  build:
+    context: .
+    target: pipeline-api
+  deploy:
+    resources:
+      reservations:
+        devices:
+          - driver: nvidia
+            count: all
+            capabilities: [gpu]
+  volumes:
+    - ${HOME}/.paddleocr:/root/.paddleocr
+    - ${HOME}/.paddlex:/root/.paddlex
+    - ./config:/app/config
+    - ./.env:/app/.env:ro
+  restart: unless-stopped
+
+services:
+  paddle-ocr-demo:
+    build:
+      context: .
+      target: gradio-ui
+    environment:
+      - GRADIO_SERVER_PORT=7860
+      - GRADIO_SERVER_NAME=0.0.0.0
+      - BOS_URL=examples
+      - GRADIO_ALLOWED_PATHS=/app/PaddleOCR-VL-1.6_Online_Demo
+      - API_URL=http://nginx/layout-parsing
+    depends_on:
+      - pipeline-api-gpu0
+      - pipeline-api-gpu1
+      - pipeline-api-gpu2
+      - pipeline-api-gpu3
+      - pipeline-api-gpu4
+      - pipeline-api-gpu5
+      - pipeline-api-gpu6
+      - pipeline-api-gpu7
+
+  vllm-server-gpu0:
+    <<: *vllm-template
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8118
+      - GENAI_MODEL=${GENAI_MODEL:-PaddleOCR-VL-1.6-0.9B}
+      - GENAI_BACKEND=${GENAI_BACKEND:-vllm}
+      - VLLM_CONFIG=${VLLM_CONFIG:-config/vllm_config.yaml}
+      - INSTANCE_GPU=0
+      - PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
+
+  vllm-server-gpu1:
+    <<: *vllm-template
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8118
+      - GENAI_MODEL=${GENAI_MODEL:-PaddleOCR-VL-1.6-0.9B}
+      - GENAI_BACKEND=${GENAI_BACKEND:-vllm}
+      - VLLM_CONFIG=${VLLM_CONFIG:-config/vllm_config.yaml}
+      - INSTANCE_GPU=1
+      - PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
+
+  vllm-server-gpu2:
+    <<: *vllm-template
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8118
+      - GENAI_MODEL=${GENAI_MODEL:-PaddleOCR-VL-1.6-0.9B}
+      - GENAI_BACKEND=${GENAI_BACKEND:-vllm}
+      - VLLM_CONFIG=${VLLM_CONFIG:-config/vllm_config.yaml}
+      - INSTANCE_GPU=2
+      - PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
+
+  vllm-server-gpu3:
+    <<: *vllm-template
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8118
+      - GENAI_MODEL=${GENAI_MODEL:-PaddleOCR-VL-1.6-0.9B}
+      - GENAI_BACKEND=${GENAI_BACKEND:-vllm}
+      - VLLM_CONFIG=${VLLM_CONFIG:-config/vllm_config.yaml}
+      - INSTANCE_GPU=3
+      - PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
+
+  vllm-server-gpu4:
+    <<: *vllm-template
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8118
+      - GENAI_MODEL=${GENAI_MODEL:-PaddleOCR-VL-1.6-0.9B}
+      - GENAI_BACKEND=${GENAI_BACKEND:-vllm}
+      - VLLM_CONFIG=${VLLM_CONFIG:-config/vllm_config.yaml}
+      - INSTANCE_GPU=4
+      - PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
+
+  vllm-server-gpu5:
+    <<: *vllm-template
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8118
+      - GENAI_MODEL=${GENAI_MODEL:-PaddleOCR-VL-1.6-0.9B}
+      - GENAI_BACKEND=${GENAI_BACKEND:-vllm}
+      - VLLM_CONFIG=${VLLM_CONFIG:-config/vllm_config.yaml}
+      - INSTANCE_GPU=5
+      - PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
+
+  vllm-server-gpu6:
+    <<: *vllm-template
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8118
+      - GENAI_MODEL=${GENAI_MODEL:-PaddleOCR-VL-1.6-0.9B}
+      - GENAI_BACKEND=${GENAI_BACKEND:-vllm}
+      - VLLM_CONFIG=${VLLM_CONFIG:-config/vllm_config.yaml}
+      - INSTANCE_GPU=6
+      - PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
+
+  vllm-server-gpu7:
+    <<: *vllm-template
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8118
+      - GENAI_MODEL=${GENAI_MODEL:-PaddleOCR-VL-1.6-0.9B}
+      - GENAI_BACKEND=${GENAI_BACKEND:-vllm}
+      - VLLM_CONFIG=${VLLM_CONFIG:-config/vllm_config.yaml}
+      - INSTANCE_GPU=7
+      - PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
+
+  pipeline-api-gpu0:
+    <<: *pipeline-template
+    environment:
+      - PIPELINE_CONFIG=${PIPELINE_CONFIG:-config/pipeline_config_vllm.yaml}
+      - PIPELINE_HOST=0.0.0.0
+      - PIPELINE_PORT=8090
+      - PIPELINE_DEVICE=gpu:0
+      - INSTANCE_GPU=0
+      - VLLM_SERVER_URL=http://vllm-server-gpu0:8118/v1
+      - PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
+    depends_on:
+      - vllm-server-gpu0
+
+  pipeline-api-gpu1:
+    <<: *pipeline-template
+    environment:
+      - PIPELINE_CONFIG=${PIPELINE_CONFIG:-config/pipeline_config_vllm.yaml}
+      - PIPELINE_HOST=0.0.0.0
+      - PIPELINE_PORT=8090
+      - PIPELINE_DEVICE=gpu:0
+      - INSTANCE_GPU=1
+      - VLLM_SERVER_URL=http://vllm-server-gpu1:8118/v1
+      - PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
+    depends_on:
+      - vllm-server-gpu1
+
+  pipeline-api-gpu2:
+    <<: *pipeline-template
+    environment:
+      - PIPELINE_CONFIG=${PIPELINE_CONFIG:-config/pipeline_config_vllm.yaml}
+      - PIPELINE_HOST=0.0.0.0
+      - PIPELINE_PORT=8090
+      - PIPELINE_DEVICE=gpu:0
+      - INSTANCE_GPU=2
+      - VLLM_SERVER_URL=http://vllm-server-gpu2:8118/v1
+      - PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
+    depends_on:
+      - vllm-server-gpu2
+
+  pipeline-api-gpu3:
+    <<: *pipeline-template
+    environment:
+      - PIPELINE_CONFIG=${PIPELINE_CONFIG:-config/pipeline_config_vllm.yaml}
+      - PIPELINE_HOST=0.0.0.0
+      - PIPELINE_PORT=8090
+      - PIPELINE_DEVICE=gpu:0
+      - INSTANCE_GPU=3
+      - VLLM_SERVER_URL=http://vllm-server-gpu3:8118/v1
+      - PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
+    depends_on:
+      - vllm-server-gpu3
+
+  pipeline-api-gpu4:
+    <<: *pipeline-template
+    environment:
+      - PIPELINE_CONFIG=${PIPELINE_CONFIG:-config/pipeline_config_vllm.yaml}
+      - PIPELINE_HOST=0.0.0.0
+      - PIPELINE_PORT=8090
+      - PIPELINE_DEVICE=gpu:0
+      - INSTANCE_GPU=4
+      - VLLM_SERVER_URL=http://vllm-server-gpu4:8118/v1
+      - PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
+    depends_on:
+      - vllm-server-gpu4
+
+  pipeline-api-gpu5:
+    <<: *pipeline-template
+    environment:
+      - PIPELINE_CONFIG=${PIPELINE_CONFIG:-config/pipeline_config_vllm.yaml}
+      - PIPELINE_HOST=0.0.0.0
+      - PIPELINE_PORT=8090
+      - PIPELINE_DEVICE=gpu:0
+      - INSTANCE_GPU=5
+      - VLLM_SERVER_URL=http://vllm-server-gpu5:8118/v1
+      - PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
+    depends_on:
+      - vllm-server-gpu5
+
+  pipeline-api-gpu6:
+    <<: *pipeline-template
+    environment:
+      - PIPELINE_CONFIG=${PIPELINE_CONFIG:-config/pipeline_config_vllm.yaml}
+      - PIPELINE_HOST=0.0.0.0
+      - PIPELINE_PORT=8090
+      - PIPELINE_DEVICE=gpu:0
+      - INSTANCE_GPU=6
+      - VLLM_SERVER_URL=http://vllm-server-gpu6:8118/v1
+      - PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
+    depends_on:
+      - vllm-server-gpu6
+
+  pipeline-api-gpu7:
+    <<: *pipeline-template
+    environment:
+      - PIPELINE_CONFIG=${PIPELINE_CONFIG:-config/pipeline_config_vllm.yaml}
+      - PIPELINE_HOST=0.0.0.0
+      - PIPELINE_PORT=8090
+      - PIPELINE_DEVICE=gpu:0
+      - INSTANCE_GPU=7
+      - VLLM_SERVER_URL=http://vllm-server-gpu7:8118/v1
+      - PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
+    depends_on:
+      - vllm-server-gpu7
+
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./PaddleOCR-VL-1.6_Online_Demo/examples:/usr/share/nginx/html/examples:ro
+    ports:
+      - "${PORT}:80"
+    depends_on:
+      - paddle-ocr-demo
+      - admin-panel
+    restart: unless-stopped
+
+  admin-panel:
+    build:
+      context: .
+      target: pipeline-api
+    environment:
+      - PIPELINE_HOST=0.0.0.0
+      - PIPELINE_PORT=8000
+      - ADMIN_USER
+      - ADMIN_PASS
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0,1}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/workspace
+    pid: "host"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+    command: ["/app/.venv-api/bin/python", "/workspace/scripts/admin_panel.py"]

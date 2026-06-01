@@ -1,0 +1,19 @@
+[project]
+name = "paddle-ocr-vl-vllm-server"
+version = "0.1.0"
+description = "vLLM inference service for PaddleOCR-VL-1.6"
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "paddleocr[doc-parser]>=3.3.0",
+    "transformers==4.57.6",
+    "torch==2.8.0",
+    "vllm==0.10.2",
+    "uvloop",
+    "xformers",
+    "einops",
+    "ultralytics>=8.4.57",
+]
+
+[dependency-groups]
+dev = []
