@@ -35,10 +35,11 @@ import {
   Grid,
   ExternalLink,
   FileCode,
-  Palette,
   LogOut,
   Sliders,
-  Menu
+  Menu,
+  MoveHorizontal,
+  MoveVertical
 } from "lucide-react";
 
 import ReactMarkdown from "react-markdown";
@@ -612,6 +613,7 @@ export default function Home() {
 
   // Zoom control state for left document panel
   const [zoomScale, setZoomScale] = useState<number>(100);
+  const [zoomMode, setZoomMode] = useState<"custom" | "fit-width" | "fit-height" | "original">("fit-width");
   
   // File input ref
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1602,6 +1604,93 @@ fetch(url, {
                 <Settings className="h-4.5 w-4.5" />
               </button>
 
+              {/* Always visible Zoom Out & Zoom In buttons */}
+              <div className="flex items-center bg-[#f3f2f1] dark:bg-zinc-900 p-0.5 rounded border border-[#edebe9] dark:border-zinc-800 mr-1">
+                <button 
+                  onClick={() => {
+                    if (activeTab === "settings") {
+                      setActiveTab(lastFunctionalTab);
+                    }
+                    setZoomMode("custom");
+                    setZoomScale(Math.max(50, zoomScale - 10));
+                  }}
+                  disabled={!previewSrc}
+                  className={`p-1 rounded border-none bg-transparent cursor-pointer transition-all flex items-center ${
+                    !previewSrc
+                      ? "text-slate-300 dark:text-zinc-700 cursor-not-allowed opacity-50"
+                      : "text-slate-500 hover:bg-white dark:hover:bg-zinc-800 hover:text-[#0078d4] dark:hover:text-white"
+                  }`}
+                  title={t("zoomOut")}
+                >
+                  <ZoomOut className="h-3.5 w-3.5" />
+                </button>
+                
+                <span className={`text-[9px] font-mono font-bold px-1 select-none ${!previewSrc ? "text-slate-300 dark:text-zinc-700" : "text-slate-555"}`}>{zoomScale}%</span>
+                
+                <button 
+                  onClick={() => {
+                    if (activeTab === "settings") {
+                      setActiveTab(lastFunctionalTab);
+                    }
+                    setZoomMode("custom");
+                    setZoomScale(Math.min(200, zoomScale + 10));
+                  }}
+                  disabled={!previewSrc}
+                  className={`p-1 rounded border-none bg-transparent cursor-pointer transition-all flex items-center ${
+                    !previewSrc
+                      ? "text-slate-300 dark:text-zinc-700 cursor-not-allowed opacity-50"
+                      : "text-slate-500 hover:bg-white dark:hover:bg-zinc-800 hover:text-[#0078d4] dark:hover:text-white"
+                  }`}
+                  title={t("zoomIn")}
+                >
+                  <ZoomIn className="h-3.5 w-3.5" />
+                </button>
+
+                <div className="h-3.5 w-[1px] bg-slate-200 dark:bg-zinc-800 mx-0.5" />
+
+                {/* Fit Width */}
+                <button 
+                  onClick={() => {
+                    if (activeTab === "settings") {
+                      setActiveTab(lastFunctionalTab);
+                    }
+                    setZoomMode("fit-width");
+                  }}
+                  disabled={!previewSrc}
+                  className={`p-1 rounded border-none bg-transparent cursor-pointer transition-all flex items-center ${
+                    !previewSrc
+                      ? "text-slate-300 dark:text-zinc-700 cursor-not-allowed opacity-50"
+                      : zoomMode === "fit-width"
+                      ? "bg-white dark:bg-zinc-800 text-[#0078d4] dark:text-white shadow-xs font-bold"
+                      : "text-slate-550 hover:bg-white dark:hover:bg-zinc-800 hover:text-[#0078d4] dark:hover:text-white"
+                  }`}
+                  title={lang === "id" ? "Sesuaikan Lebar" : lang === "ja" ? "幅に合わせる" : lang === "zh" ? "适合宽度" : "Fit Width"}
+                >
+                  <MoveHorizontal className="h-3.5 w-3.5" />
+                </button>
+
+                {/* Fit Height */}
+                <button 
+                  onClick={() => {
+                    if (activeTab === "settings") {
+                      setActiveTab(lastFunctionalTab);
+                    }
+                    setZoomMode("fit-height");
+                  }}
+                  disabled={!previewSrc}
+                  className={`p-1 rounded border-none bg-transparent cursor-pointer transition-all flex items-center ${
+                    !previewSrc
+                      ? "text-slate-300 dark:text-zinc-700 cursor-not-allowed opacity-50"
+                      : zoomMode === "fit-height"
+                      ? "bg-white dark:bg-zinc-800 text-[#0078d4] dark:text-white shadow-xs font-bold"
+                      : "text-slate-550 hover:bg-white dark:hover:bg-zinc-800 hover:text-[#0078d4] dark:hover:text-white"
+                  }`}
+                  title={lang === "id" ? "Sesuaikan Tinggi" : lang === "ja" ? "高さに合わせる" : lang === "zh" ? "适合高度" : "Fit Height"}
+                >
+                  <MoveVertical className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
               {/* Always visible Upload & Camera buttons */}
               <div className="flex items-center gap-1 bg-[#f3f2f1] dark:bg-zinc-905 p-0.5 rounded border border-[#edebe9] dark:border-zinc-800">
                 <button
@@ -1871,45 +1960,94 @@ fetch(url, {
                     {previewSrc && <div className="h-4 w-[1px] bg-slate-200 dark:bg-zinc-800" />}
 
                     {/* Bounding Box toggler overlay (Eye) */}
-                    {activeVisualizationUrl && (
-                      <button
-                        onClick={() => setShowOverlays(!showOverlays)}
-                        className={`h-7 px-2.5 rounded text-[10px] font-bold border transition-colors flex items-center gap-1 cursor-pointer ${
-                          showOverlays 
-                            ? "bg-emerald-555 border-emerald-550 text-white dark:bg-emerald-600/20 dark:border-emerald-500/30 dark:text-emerald-400" 
-                            : "bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-805 text-slate-500 dark:text-zinc-400 hover:bg-slate-55"
-                        }`}
-                        title={t("overlays")}
-                      >
-                        {showOverlays ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-                        {t("overlays")}
-                      </button>
-                    )}
+                    <button
+                      onClick={() => setShowOverlays(!showOverlays)}
+                      disabled={!previewSrc}
+                      className={`h-7 px-2.5 rounded text-[10px] font-bold border transition-all flex items-center gap-1 cursor-pointer select-none ${
+                        !previewSrc
+                          ? "bg-transparent border-transparent text-slate-300 dark:text-zinc-700 cursor-not-allowed opacity-50"
+                          : showOverlays 
+                          ? "bg-emerald-600 border-emerald-600 text-white dark:bg-emerald-955/40 dark:border-emerald-800 dark:text-emerald-400 hover:bg-emerald-700 dark:hover:bg-emerald-900/30" 
+                          : "bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800"
+                      }`}
+                      title={t("overlays")}
+                    >
+                      {showOverlays ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                      {t("overlays")}
+                    </button>
 
                     <div className="h-4 w-[1px] bg-slate-200 dark:bg-zinc-800" />
 
-                    <div className="flex items-center gap-0.5">
+                    <div className="flex items-center gap-1 bg-[#f3f2f1] dark:bg-zinc-900 p-0.5 rounded border border-slate-202 dark:border-zinc-800">
+                      {/* Zoom Out */}
                       <button 
-                        onClick={() => setZoomScale(Math.max(50, zoomScale - 10))}
-                        className="p-1 rounded text-slate-500 hover:bg-slate-100 dark:hover:bg-zinc-800"
+                        onClick={() => {
+                          setZoomMode("custom");
+                          setZoomScale(Math.max(50, zoomScale - 10));
+                        }}
+                        className="p-1 rounded text-slate-500 hover:bg-white dark:hover:bg-zinc-800 border-none bg-transparent cursor-pointer"
                         title={t("zoomOut")}
                       >
                         <ZoomOut className="h-3.5 w-3.5" />
                       </button>
-                      <span className="text-[10px] font-mono font-bold px-1 text-slate-500 select-none">{zoomScale}%</span>
+                      
+                      {/* Zoom Percentage */}
+                      <span className="text-[10px] font-mono font-bold px-1.5 text-slate-500 select-none">{zoomScale}%</span>
+
+                      {/* Zoom In */}
                       <button 
-                        onClick={() => setZoomScale(Math.min(200, zoomScale + 10))}
-                        className="p-1 rounded text-slate-500 hover:bg-slate-100 dark:hover:bg-zinc-800"
+                        onClick={() => {
+                          setZoomMode("custom");
+                          setZoomScale(Math.min(200, zoomScale + 10));
+                        }}
+                        className="p-1 rounded text-slate-555 hover:bg-white dark:hover:bg-zinc-800 border-none bg-transparent cursor-pointer"
                         title={t("zoomIn")}
                       >
                         <ZoomIn className="h-3.5 w-3.5" />
                       </button>
+
+                      <div className="h-3.5 w-[1px] bg-slate-202 dark:bg-zinc-800 mx-0.5" />
+
+                      {/* Fit Width */}
                       <button 
-                        onClick={() => setZoomScale(100)}
-                        className="px-2 py-0.5 border border-slate-200 dark:border-zinc-800 rounded text-[9px] font-bold text-slate-500 hover:bg-slate-55 dark:hover:bg-zinc-800"
-                        title={t("resetScale")}
+                        onClick={() => setZoomMode("fit-width")}
+                        className={`p-1 rounded border-none bg-transparent cursor-pointer transition-all ${
+                          zoomMode === "fit-width"
+                            ? "bg-white dark:bg-zinc-800 text-[#0078d4] dark:text-white shadow-xs font-bold"
+                            : "text-slate-550 hover:bg-white dark:hover:bg-zinc-800 hover:text-[#0078d4]"
+                        }`}
+                        title={lang === "id" ? "Sesuaikan Lebar" : lang === "ja" ? "幅に合わせる" : lang === "zh" ? "适合宽度" : "Fit Width"}
                       >
-                        {t("reset")}
+                        <MoveHorizontal className="h-3.5 w-3.5" />
+                      </button>
+
+                      {/* Fit Height */}
+                      <button 
+                        onClick={() => setZoomMode("fit-height")}
+                        className={`p-1 rounded border-none bg-transparent cursor-pointer transition-all ${
+                          zoomMode === "fit-height"
+                            ? "bg-white dark:bg-zinc-800 text-[#0078d4] dark:text-white shadow-xs font-bold"
+                            : "text-slate-550 hover:bg-white dark:hover:bg-zinc-800 hover:text-[#0078d4]"
+                        }`}
+                        title={lang === "id" ? "Sesuaikan Tinggi" : lang === "ja" ? "高さに合わせる" : lang === "zh" ? "适合高度" : "Fit Height"}
+                      >
+                        <MoveVertical className="h-3.5 w-3.5" />
+                      </button>
+
+                      {/* Original Size */}
+                      <button 
+                        onClick={() => {
+                          setZoomMode("original");
+                          setZoomScale(100);
+                        }}
+                        className={`p-1 rounded border-none bg-transparent cursor-pointer transition-all ${
+                          zoomMode === "original"
+                            ? "bg-white dark:bg-zinc-800 text-[#0078d4] dark:text-white shadow-xs font-bold"
+                            : "text-slate-550 hover:bg-white dark:hover:bg-zinc-800 hover:text-[#0078d4]"
+                        }`}
+                        title={lang === "id" ? "Ukuran Asli" : lang === "ja" ? "元のサイズ" : lang === "zh" ? "原始大小" : "Original Size"}
+                      >
+                        <Maximize2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   </div>
@@ -1976,7 +2114,13 @@ fetch(url, {
                   <div 
                     onDragOver={handleDragOver}
                     onDrop={handleDrop}
-                    className="flex-1 overflow-auto p-0 flex items-center justify-center bg-slate-50/60 dark:bg-zinc-955/20"
+                    className={`flex-1 overflow-auto p-0 flex bg-slate-50/60 dark:bg-zinc-955/20 ${
+                      zoomMode === "fit-width" 
+                        ? "items-start justify-center"
+                        : zoomMode === "original"
+                        ? "items-start justify-start p-4"
+                        : "items-center justify-center"
+                    }`}
                   >
                     {isCameraActive ? (
                       <div className="w-full max-w-md bg-zinc-900 dark:bg-zinc-955 rounded-xl overflow-hidden shadow-lg p-5 flex flex-col items-center gap-4 border border-slate-200 dark:border-zinc-800 mx-4">
@@ -2005,17 +2149,43 @@ fetch(url, {
                         </div>
                       </div>
                     ) : previewSrc ? (
-                      <div 
-                        className="relative transition-transform duration-200 w-full h-full flex items-center justify-center"
-                        style={{ transform: `scale(${zoomScale / 100})`, transformOrigin: "center center" }}
-                      >
-                        {/* Bounding box visual overlay */}
-                        <img 
-                          src={showOverlays && activeVisualizationUrl ? activeVisualizationUrl : previewSrc} 
-                          alt="Active document viewport" 
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
+                      (() => {
+                        let wrapperStyle: React.CSSProperties = {
+                          transition: "transform 0.2s",
+                          transformOrigin: "center center"
+                        };
+                        let imgClassName = "";
+
+                        if (zoomMode === "original") {
+                          wrapperStyle.width = "auto";
+                          wrapperStyle.height = "auto";
+                          imgClassName = "max-w-none max-h-none w-auto h-auto";
+                        } else if (zoomMode === "fit-width") {
+                          wrapperStyle.width = "100%";
+                          wrapperStyle.height = "auto";
+                          imgClassName = "w-full h-auto max-w-none max-h-none";
+                        } else if (zoomMode === "fit-height") {
+                          wrapperStyle.width = "auto";
+                          wrapperStyle.height = "100%";
+                          imgClassName = "w-auto h-full max-w-none max-h-none";
+                        } else {
+                          wrapperStyle.width = "100%";
+                          wrapperStyle.height = "100%";
+                          wrapperStyle.transform = `scale(${zoomScale / 100})`;
+                          imgClassName = "w-full h-full object-contain";
+                        }
+
+                        return (
+                          <div style={wrapperStyle} className="relative flex items-center justify-center">
+                            {/* Bounding box visual overlay */}
+                            <img 
+                              src={showOverlays && activeVisualizationUrl ? activeVisualizationUrl : previewSrc} 
+                              alt="Active document viewport" 
+                              className={imgClassName}
+                            />
+                          </div>
+                        );
+                      })()
                     ) : (
                       <div 
                         className="border-2 border-dashed border-slate-355 dark:border-zinc-800 rounded-xl p-8 bg-white dark:bg-zinc-900/30 text-center max-w-sm shadow-xs hover:border-[#0078d4] dark:hover:border-zinc-600 transition-colors flex flex-col items-center gap-4 group"
