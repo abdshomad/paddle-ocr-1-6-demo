@@ -39,6 +39,12 @@ When a user intentionally asks to test the app:
 - Save screenshots in the `/screenshots/` folder.
 - Use the file naming convention: `{2-digit-numberss}-{steps#}-{variant/options if any}-{slug}.jpg`.
 
+## GPU Execution Policy (Mandatory)
+
+**Always use GPU for model execution and never fall back to CPU.**
+- The server has **2 L40 GPUs** available.
+- If GPU is not available (e.g., due to memory constraints or other processes running on the GPUs), identify and free up those other non-essential processes (using `nvidia-smi` to find PIDs and killing/stopping them) to ensure our testing has dedicated GPU resources.
+
 ## Agent System Tasks
 
 1. **Dependency Integration**: Keep dependencies synchronized using `uv`. Never touch submodule source code; integrate via env, Docker, Nginx, and parent-repo config instead.
