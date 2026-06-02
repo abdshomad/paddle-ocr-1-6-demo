@@ -144,7 +144,7 @@ def get_current_settings():
     
     settings = {
         "cuda_devices": "all",
-        "gpu_utilization": "0.95"
+        "gpu_utilization": "0.5"
     }
     
     if os.path.exists(env_file):
@@ -212,7 +212,7 @@ server {{
 
     # Proxy all other requests to the Gradio backend
     location / {{
-        proxy_pass http://paddle-ocr-demo:7860;
+        proxy_pass http://paddle-ocr-demo:3000;
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

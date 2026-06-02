@@ -1,4 +1,4 @@
 # vLLM backend tuning for paddleocr genai_server
 # Docs: https://www.paddleocr.ai/latest/en/version3.x/pipeline_usage/PaddleOCR-VL.html#331-server-side-parameter-adjustment
-gpu-memory-utilization: 0.95
+gpu-memory-utilization: 0.5
 max-num-seqs: 128
