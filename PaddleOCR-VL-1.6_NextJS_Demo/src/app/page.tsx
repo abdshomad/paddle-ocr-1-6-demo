@@ -139,7 +139,7 @@ export default function Home() {
   const [origin, setOrigin] = useState("http://localhost:7872");
 
   // Sidebar Display mode: "icon-text" | "icon" | "text"
-  const [menuDisplay, setMenuDisplay] = useState<"icon-text" | "icon" | "text">("icon-text");
+  const [menuDisplay, setMenuDisplay] = useState<"icon-text" | "icon" | "text">("icon");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -154,6 +154,8 @@ export default function Home() {
     const savedMenuDisplay = localStorage.getItem("menuDisplay") as typeof menuDisplay | null;
     if (savedMenuDisplay === "icon" || savedMenuDisplay === "text" || savedMenuDisplay === "icon-text") {
       setMenuDisplay(savedMenuDisplay);
+    } else {
+      setMenuDisplay("icon");
     }
     
     // Clear existing classes
